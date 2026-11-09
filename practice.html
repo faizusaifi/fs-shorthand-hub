@@ -132,6 +132,7 @@
 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
     <script>
         const firebaseConfig = {
@@ -147,53 +148,62 @@
             firebase.initializeApp(firebaseConfig);
         }
 
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
         let currentDictation = null;
         let timeLeft = 300;
         let timerInterval;
 
-        firebase.auth().onAuthStateChanged((user) => {
+        auth.onAuthStateChanged((user) => {
             if (user) {
                 document.getElementById('userEmail').innerText = user.email;
-                loadDictationFolders();
+                loadDictationFoldersFromFirebase();
             } else {
                 window.location.replace("login.html");
             }
         });
 
         function logout() {
-            firebase.auth().signOut().then(() => { window.location.replace("login.html"); });
+            auth.signOut().then(() => { window.location.replace("login.html"); });
         }
 
-        function loadDictationFolders() {
+        function loadDictationFoldersFromFirebase() {
             document.getElementById('folderView').style.display = 'block';
             document.getElementById('testView').style.display = 'none';
             document.getElementById('resultView').style.display = 'none';
 
             let grid = document.getElementById('dictCardsGrid');
-            grid.innerHTML = "";
+            grid.innerHTML = "<p style='color: #94a3b8;'>Dictations load ho rahi hain...</p>";
 
-            let allDicts = JSON.parse(localStorage.getItem("fs_all_dictations") || "[]");
+            db.collection("dictations").orderBy("createdAt", "desc").get().then((querySnapshot) => {
+                grid.innerHTML = "";
+                if(querySnapshot.empty) {
+                    grid.innerHTML = `
+                        <div class="card" style="grid-column: 1 / -1; text-align: center;">
+                            <h3>📁 Abhi koi Dictation uplabdh nahi hai</h3>
+                            <p>Kripya Admin Panel se nayi dictation add karein.</p>
+                        </div>
+                    `;
+                    return;
+                }
 
-            if(allDicts.length === 0) {
-                grid.innerHTML = `
-                    <div class="card" style="grid-column: 1 / -1; text-align: center;">
-                        <h3>📁 Abhi koi Dictation uplabdh nahi hai</h3>
-                        <p>Kripya Admin Panel se nayi dictation add karein.</p>
-                    </div>
-                `;
-                return;
-            }
-
-            allDicts.forEach(d => {
-                let card = document.createElement('div');
-                card.className = 'card';
-                card.innerHTML = `
-                    <h3>📁 ${d.title}</h3>
-                    <p><b>Category:</b> ${d.category}</p>
-                    <p><b>Time Limit:</b> ${d.timeLimit} Minutes</p>
-                    <button class="start-test-btn" onclick='startSpecificTest(${JSON.stringify(d)})'>Start Test</button>
-                `;
-                grid.appendChild(card);
+                querySnapshot.forEach((doc) => {
+                    let d = doc.data();
+                    d.id = doc.id;
+                    let card = document.createElement('div');
+                    card.className = 'card';
+                    card.innerHTML = `
+                        <h3>📁 ${d.title}</h3>
+                        <p><b>Category:</b> ${d.category}</p>
+                        <p><b>Time Limit:</b> ${d.timeLimit} Minutes</p>
+                        <button class="start-test-btn" onclick='startSpecificTest(${JSON.stringify(d)})'>Start Test</button>
+                    `;
+                    grid.appendChild(card);
+                });
+            }).catch((error) => {
+                console.error("Error loading dictations: ", error);
+                grid.innerHTML = "<p style='color: #f87171;'>Dictation load karne mein error aayi hai.</p>";
             });
         }
 
@@ -237,7 +247,7 @@
         function backToFolders() {
             clearInterval(timerInterval);
             document.getElementById('dictationAudio').pause();
-            loadDictationFolders();
+            loadDictationFoldersFromFirebase();
         }
 
         function updateTimerDisplay() {
@@ -323,7 +333,7 @@
                         origHTMLArray[item.origIdx] = w1 + " ";
                         typedHTMLArray[item.typedIdx] = w2 + " ";
                     } else {
-                        fullMistakes += 1; // Sirf ek baar gina jayega
+                        fullMistakes += 1;
                         origHTMLArray[item.origIdx] = `<span class="full-err">${w1}</span> `;
                         typedHTMLArray[item.typedIdx] = `<span class="full-err">${w2}</span> `;
                     }
@@ -336,8 +346,6 @@
                 } else if (item.status === 'insertion') {
                     let w2 = typedWords[item.typedIdx];
                     if(normalizeWord(w2) !== "") {
-                        // Insertion ko alag se full mistake nahi manenge taaki double count na ho, 
-                        // yeh sirf typing box me highlight rahega agar zaroorat ho.
                         typedHTMLArray[item.typedIdx] = `<span class="full-err">${w2}</span> `;
                     }
                 }

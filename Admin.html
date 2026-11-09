@@ -3,96 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FS Shorthand Hub - Admin Dashboard</title>
+    <title>FS Shorthand Hub - Admin Panel</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 0; }
-        .header { background-color: #343a40; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
-        .header h1 { margin: 0; font-size: 20px; }
-        .container { max-width: 900px; margin: 30px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-top: 4px solid #28a745; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0f172a; color: #f8fafc; margin: 0; padding: 0; }
+        .header { background-color: #1e293b; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; }
+        .header h1 { margin: 0; font-size: 22px; color: #38bdf8; }
+        .logout-btn { background-color: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
         
-        #loginSection { text-align: center; padding: 20px; max-width: 400px; margin: 50px auto; background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        #loginSection input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 16px; }
-        #loginSection button { width: 100%; padding: 12px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; }
+        .container { max-width: 900px; margin: 30px auto; padding: 20px; }
+        .card { background: #1e293b; border: 1px solid #334155; padding: 25px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); margin-bottom: 30px; }
+        .card h2 { margin-top: 0; color: #38bdf8; font-size: 20px; border-bottom: 1px solid #334155; padding-bottom: 10px; }
         
-        #adminPanelContent { display: none; }
-        label { display: block; margin-top: 15px; font-weight: bold; color: #333; }
-        input[type="text"], input[type="number"], select, textarea { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; box-sizing: border-box; }
-        textarea { height: 120px; resize: vertical; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; color: #94a3b8; font-size: 14px; }
+        input, select, textarea { width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; color: white; border-radius: 6px; font-size: 15px; box-sizing: border-box; }
+        textarea { height: 150px; resize: vertical; }
         
-        .save-btn { background-color: #28a745; color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 20px; width: 100%; }
-        .save-btn:hover { background-color: #218838; }
-        .logout-btn { background-color: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        
-        .dictation-list { margin-top: 30px; border-top: 2px solid #eee; padding-top: 20px; }
+        .add-btn { background-color: #22c55e; color: white; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; width: 100%; }
+        .add-btn:hover { background-color: #16a34a; }
+
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; font-size: 14px; }
-        th { background-color: #f8f9fa; }
-        .del-btn { background-color: #dc3545; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; }
-        .success-msg { color: green; font-weight: bold; margin-top: 15px; text-align: center; display: none; background: #e2f0d9; padding: 10px; border-radius: 5px; }
+        th, td { border: 1px solid #334155; padding: 12px; text-align: left; font-size: 14px; }
+        th { background-color: #0f172a; color: #38bdf8; }
+        td { color: #cbd5e1; }
+        .delete-btn { background-color: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h1>🛠️ FS Shorthand Hub - Admin Panel</h1>
+        <h1>🎓 FS Shorthand Hub - Admin Panel</h1>
         <div>
-            <span id="adminEmail" style="font-size: 14px; margin-right: 15px;"></span>
-            <button id="logoutBtn" class="logout-btn" style="display:none;" onclick="adminLogout()">Logout</button>
+            <span id="adminEmail" style="margin-right: 15px; font-size: 14px; color: #94a3b8;"></span>
+            <button class="logout-btn" onclick="logout()">Logout</button>
         </div>
     </div>
 
-    <!-- Login Section -->
-    <div id="loginSection">
-        <h2 style="color: #0056b3; margin-top: 0;">Admin Login</h2>
-        <input type="email" id="adminEmailInput" placeholder="Admin Email" required>
-        <input type="password" id="adminPasswordInput" placeholder="Password" required>
-        <button onclick="adminLogin()">Login</button>
-        <p id="errorMsg" style="color: red; font-size: 14px; display: none;"></p>
-    </div>
-
-    <!-- Admin Dashboard Content -->
-    <div class="container" id="adminPanelContent">
-        <h2 style="margin-top: 0; color: #28a745;">📁 Nayi Dictation Add Karein</h2>
+    <div class="container">
         
-        <label>Category / Folder:</label>
-        <select id="dictCategory">
-            <option value="BSF Steno">BSF Steno Exam</option>
-            <option value="AIIMS Steno">AIIMS Steno Exam</option>
-            <option value="UPSSSC Steno">UPSSSC Steno Exam</option>
-            <option value="Legal & Court">Legal & Court Dictations</option>
-            <option value="General Matter">General Matter</option>
-        </select>
+        <!-- Add Dictation Card -->
+        <div class="card">
+            <h2>➕ Nayi Dictation Jodein (Online Firestore)</h2>
+            <div class="form-group">
+                <label>Dictation Title (e.g., Digital Payment System)</label>
+                <input type="text" id="dictTitle" placeholder="Title likhein...">
+            </div>
+            <div class="form-group">
+                <label>Category / Folder</label>
+                <select id="dictCategory">
+                    <option value="BSF Steno">BSF Steno</option>
+                    <option value="AIIMS Steno">AIIMS Steno</option>
+                    <option value="UPSSSC Steno">UPSSSC Steno</option>
+                    <option value="Legal Matter">Legal Matter</option>
+                    <option value="General Matter">General Matter</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Audio File Direct URL (GitHub Raw Link)</label>
+                <input type="text" id="dictAudioUrl" placeholder="https://raw.githubusercontent.com/.../audio.mp3">
+            </div>
+            <div class="form-group">
+                <label>Time Limit (Minutes)</label>
+                <input type="number" id="dictTimeLimit" value="5" min="1" max="30">
+            </div>
+            <div class="form-group">
+                <label>Original Matter (Exact Text for Evaluation)</label>
+                <textarea id="dictOriginalText" placeholder="Yahan original matter paste karein..."></textarea>
+            </div>
+            <button class="add-btn" onclick="addDictationToFirebase()">Dictation Save Karein</button>
+        </div>
 
-        <label>Dictation Title:</label>
-        <input type="text" id="dictTitle" placeholder="Eg: Day 1 - Legal Dictation (80 WPM)">
-
-        <label>Audio File URL (.mp3 link):</label>
-        <input type="text" id="audioUrl" placeholder="Audio ka direct link yahan paste karein">
-
-        <label>Time Limit (Minutes):</label>
-        <input type="number" id="timeLimit" value="5">
-
-        <label>Original Matter (Reference Text):</label>
-        <textarea id="origText" placeholder="Yahan poora original matter likhe ya paste karein..."></textarea>
-
-        <button class="save-btn" onclick="uploadDictation()">Database mein Save Karein</button>
-        <div id="successMsg" class="success-msg">✅ Dictation safalta-purvak save ho gayi hai!</div>
-
-        <div class="dictation-list">
-            <h3>📋 Uploaded Dictations List</h3>
+        <!-- Manage Dictations Card -->
+        <div class="card">
+            <h2>📁 Sabhi Dictations ki List</h2>
             <table>
                 <thead>
                     <tr>
-                        <th>Category</th>
                         <th>Title</th>
+                        <th>Category</th>
+                        <th>Time</th>
                         <th>Action</th>
                     </tr>
+                Refined:
                 </thead>
-                <tbody id="dictTableBody">
+                <tbody id="adminDictTableBody">
                     <!-- Dynamic List -->
                 </tbody>
             </table>
         </div>
+
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -118,98 +117,82 @@
 
         auth.onAuthStateChanged((user) => {
             if (user) {
-                document.getElementById('loginSection').style.display = 'none';
-                document.getElementById('adminPanelContent').style.display = 'block';
                 document.getElementById('adminEmail').innerText = "Admin: " + user.email;
-                document.getElementById('logoutBtn').style.display = 'inline-block';
                 loadAdminDictations();
             } else {
-                document.getElementById('loginSection').style.display = 'block';
-                document.getElementById('adminPanelContent').style.display = 'none';
+                window.location.replace("login.html");
             }
         });
 
-        function adminLogin() {
-            const email = document.getElementById('adminEmailInput').value;
-            const password = document.getElementById('adminPasswordInput').value;
-            const errP = document.getElementById('errorMsg');
-            
-            auth.signInWithEmailAndPassword(email, password)
-            .catch((error) => {
-                errP.innerText = "Error: " + error.message;
-                errP.style.display = 'block';
-            });
+        function logout() {
+            auth.signOut().then(() => { window.location.replace("login.html"); });
         }
 
-        function adminLogout() {
-            auth.signOut();
-        }
-
-        function uploadDictation() {
-            let category = document.getElementById('dictCategory').value;
+        function addDictationToFirebase() {
             let title = document.getElementById('dictTitle').value.trim();
-            let audio = document.getElementById('audioUrl').value.trim();
-            let time = document.getElementById('timeLimit').value.trim();
-            let text = document.getElementById('origText').value.trim();
+            let category = document.getElementById('dictCategory').value;
+            let audioUrl = document.getElementById('dictAudioUrl').value.trim();
+            let timeLimit = parseInt(document.getElementById('dictTimeLimit').value) || 5;
+            let originalText = document.getElementById('dictOriginalText').value.trim();
 
-            if(!title || !audio || !time || !text) {
+            if(!title || !audioUrl || !originalText) {
                 alert("Kripya sabhi fields bharein!");
                 return;
             }
 
-            let dictId = "dict_" + Date.now();
-            let dictData = {
-                id: dictId,
-                category: category,
+            db.collection("dictations").add({
                 title: title,
-                audioUrl: audio,
-                timeLimit: parseInt(time),
-                originalText: text
-            };
-
-            // LocalStorage array mein save karein (Offline-friendly + fast syncing)
-            let allDicts = JSON.parse(localStorage.getItem("fs_all_dictations") || "[]");
-            allDicts.push(dictData);
-            localStorage.setItem("fs_all_dictations", JSON.stringify(allDicts));
-            localStorage.setItem("fs_latest_dictation", JSON.stringify(dictData)); // Quick access ke liye
-
-            document.getElementById('successMsg').style.display = "block";
-            document.getElementById('dictTitle').value = "";
-            document.getElementById('audioUrl').value = "";
-            document.getElementById('origText').value = "";
-            
-            loadAdminDictations();
-            setTimeout(() => { document.getElementById('successMsg').style.display = "none"; }, 3000);
-        }
-
-        function loadAdminDictations() {
-            let tbody = document.getElementById('dictTableBody');
-            tbody.innerHTML = "";
-            let allDicts = JSON.parse(localStorage.getItem("fs_all_dictations") || "[]");
-
-            if(allDicts.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#666;">Koi dictation uplabdh nahi hai.</td></tr>`;
-                return;
-            }
-
-            allDicts.forEach((d, index) => {
-                let tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><b>${d.category}</b></td>
-                    <td>${d.title}</td>
-                    <td><button class="del-btn" onclick="deleteDictation('${d.id}')">Delete</button></td>
-                `;
-                tbody.appendChild(tr);
+                category: category,
+                audioUrl: audioUrl,
+                timeLimit: timeLimit,
+                originalText: originalText,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            }).then(() => {
+                alert("✅ Dictation safalta-purvak online add ho gayi hai!");
+                document.getElementById('dictTitle').value = "";
+                document.getElementById('dictAudioUrl').value = "";
+                document.getElementById('dictOriginalText').value = "";
+                loadAdminDictations();
+            }).catch((error) => {
+                alert("Error adding dictation: " + error.message);
             });
         }
 
-        function deleteDictation(id) {
+        function loadAdminDictations() {
+            let tbody = document.getElementById('adminDictTableBody');
+            tbody.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Load ho raha hai...</td></tr>";
+
+            db.collection("dictations").orderBy("createdAt", "desc").get().then((querySnapshot) => {
+                tbody.innerHTML = "";
+                if(querySnapshot.empty) {
+                    tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #64748b;">Koi dictation uplabdh nahi hai.</td></tr>`;
+                    return;
+                }
+
+                querySnapshot.forEach((doc) => {
+                    let d = doc.data();
+                    let tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><b>${d.title}</b></td>
+                        <td>${d.category}</td>
+                        <td>${d.timeLimit} Min</td>
+                        <td><button class="delete-btn" onclick="deleteDictation('${doc.id}')">Delete</button></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }).catch((error) => {
+                console.error("Error loading dictations: ", error);
+            });
+        }
+
+        function deleteDictation(docId) {
             if(confirm("Kya aap is dictation ko delete karna chahte hain?")) {
-                let allDicts = JSON.parse(localStorage.getItem("fs_all_dictations") || "[]");
-                allDicts = allDicts.filter(d => d.id !== id);
-                localStorage.setItem("fs_all_dictations", JSON.stringify(allDicts));
-                loadAdminDictations();
-                alert("Dictation delete ho gayi hai.");
+                db.collection("dictations").doc(docId).delete().then(() => {
+                    alert("Dictation delete ho gayi.");
+                    loadAdminDictations();
+                }).catch((error) => {
+                    alert("Error deleting: " + error.message);
+                });
             }
         }
     </script>
