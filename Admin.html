@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FS Shorthand Hub - Admin Dashboard</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 0; }
+        .header { background-color: #343a40; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { margin: 0; font-size: 20px; }
+        .container { max-width: 900px; margin: 30px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-top: 4px solid #28a745; }
+        
+        #loginSection { text-align: center; padding: 20px; max-width: 400px; margin: 50px auto; background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        #loginSection input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 16px; }
+        #loginSection button { width: 100%; padding: 12px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; }
+        
+        #adminPanelContent { display: none; }
+        label { display: block; margin-top: 15px; font-weight: bold; color: #333; }
+        input[type="text"], input[type="number"], select, textarea { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; box-sizing: border-box; }
+        textarea { height: 120px; resize: vertical; }
+        
+        .save-btn { background-color: #28a745; color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 20px; width: 100%; }
+        .save-btn:hover { background-color: #218838; }
+        .logout-btn { background-color: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        
+        .dictation-list { margin-top: 30px; border-top: 2px solid #eee; padding-top: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; font-size: 14px; }
+        th { background-color: #f8f9fa; }
+        .del-btn { background-color: #dc3545; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; }
+        .success-msg { color: green; font-weight: bold; margin-top: 15px; text-align: center; display: none; background: #e2f0d9; padding: 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>🛠️ FS Shorthand Hub - Admin Panel</h1>
+        <div>
+            <span id="adminEmail" style="font-size: 14px; margin-right: 15px;"></span>
+            <button id="logoutBtn" class="logout-btn" style="display:none;" onclick="adminLogout()">Logout</button>
+        </div>
+    </div>
+
+    <!-- Login Section -->
+    <div id="loginSection">
+        <h2 style="color: #0056b3; margin-top: 0;">Admin Login</h2>
+        <input type="email" id="adminEmailInput" placeholder="Admin Email" required>
+        <input type="password" id="adminPasswordInput" placeholder="Password" required>
+        <button onclick="adminLogin()">Login</button>
+        <p id="errorMsg" style="color: red; font-size: 14px; display: none;"></p>
+    </div>
+
+    <!-- Admin Dashboard Content -->
+    <div class="container" id="adminPanelContent">
+        <h2 style="margin-top: 0; color: #28a745;">📁 Nayi Dictation Add Karein</h2>
+        
+        <label>Category / Folder:</label>
+        <select id="dictCategory">
+            <option value="BSF Steno">BSF Steno Exam</option>
+            <option value="AIIMS Steno">AIIMS Steno Exam</option>
+            <option value="UPSSSC Steno">UPSSSC Steno Exam</option>
+            <option value="Legal & Court">Legal & Court Dictations</option>
+            <option value="General Matter">General Matter</option>
+        </select>
+
+        <label>Dictation Title:</label>
+        <input type="text" id="dictTitle" placeholder="Eg: Day 1 - Legal Dictation (80 WPM)">
+
+        <label>Audio File URL (.mp3 link):</label>
+        <input type="text" id="audioUrl" placeholder="Audio ka direct link yahan paste karein">
+
+        <label>Time Limit (Minutes):</label>
+        <input type="number" id="timeLimit" value="5">
+
+        <label>Original Matter (Reference Text):</label>
+        <textarea id="origText" placeholder="Yahan poora original matter likhe ya paste karein..."></textarea>
+
+        <button class="save-btn" onclick="uploadDictation()">Database mein Save Karein</button>
+        <div id="successMsg" class="success-msg">✅ Dictation safalta-purvak save ho gayi hai!</div>
+
+        <div class="dictation-list">
+            <h3>📋 Uploaded Dictations List</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Title</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="dictTableBody">
+                    <!-- Dynamic List -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCQRL68rxE5A8sjz0A3H4hVde4lV3ZEI28",
+            authDomain: "fs-shorthand-hub.firebaseapp.com",
+            projectId: "fs-shorthand-hub",
+            storageBucket: "fs-shorthand-hub.firebasestorage.app",
+            messagingSenderId: "358638447717",
+            appId: "1:358638447717:web:854442a3ad222b9d1caa8c"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                document.getElementById('loginSection').style.display = 'none';
+                document.getElementById('adminPanelContent').style.display = 'block';
+                document.getElementById('adminEmail').innerText = "Admin: " + user.email;
+                document.getElementById('logoutBtn').style.display = 'inline-block';
+                loadAdminDictations();
+            } else {
+                document.getElementById('loginSection').style.display = 'block';
+                document.getElementById('adminPanelContent').style.display = 'none';
+            }
+        });
+
+        function adminLogin() {
+            const email = document.getElementById('adminEmailInput').value;
+            const password = document.getElementById('adminPasswordInput').value;
+            const errP = document.getElementById('errorMsg');
+            
+            auth.signInWithEmailAndPassword(email, password)
+            .catch((error) => {
+                errP.innerText = "Error: " + error.message;
+                errP.style.display = 'block';
+            });
+        }
+
+        function adminLogout() {
+            auth.signOut();
+        }
+
+        function uploadDictation() {
+            let category = document.getElementById('dictCategory').value;
+            let title = document.getElementById('dictTitle').value.trim();
+            let audio = document.getElementById('audioUrl').value.trim();
+            let time = document.getElementById('timeLimit').value.trim();
+            let text = document.getElementById('origText').value.trim();
+
+            if(!title || !audio || !time || !text) {
+                alert("Kripya sabhi fields bharein!");
+                return;
+            }
+
+            let dictId = "dict_" + Date.now();
+            let dictData = {
+                id: dictId,
+                category: category,
+                title: title,
+                audioUrl: audio,
+                timeLimit: parseInt(time),
+                originalText: text
+            };
+
+            // LocalStorage array mein save karein (Offline-friendly + fast syncing)
+            let allDicts = JSON.parse(localStorage.getItem("fs_all_dictations") || "[]");
+            allDicts.push(dictData);
+            localStorage.setItem("fs_all_dictations", JSON.stringify(allDicts));
+            localStorage.setItem("fs_latest_dictation", JSON.stringify(dictData)); // Quick access ke liye
+
+            document.getElementById('successMsg').style.display = "block";
+            document.getElementById('dictTitle').value = "";
+            document.getElementById('audioUrl').value = "";
+            document.getElementById('origText').value = "";
+            
+            loadAdminDictations();
+            setTimeout(() => { document.getElementById('successMsg').style.display = "none"; }, 3000);
+        }
+
+        function loadAdminDictations() {
+            let tbody = document.getElementById('dictTableBody');
+            tbody.innerHTML = "";
+            let allDicts = JSON.parse(localStorage.getItem("fs_all_dictations") || "[]");
+
+            if(allDicts.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#666;">Koi dictation uplabdh nahi hai.</td></tr>`;
+                return;
+            }
+
+            allDicts.forEach((d, index) => {
+                let tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><b>${d.category}</b></td>
+                    <td>${d.title}</td>
+                    <td><button class="del-btn" onclick="deleteDictation('${d.id}')">Delete</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function deleteDictation(id) {
+            if(confirm("Kya aap is dictation ko delete karna chahte hain?")) {
+                let allDicts = JSON.parse(localStorage.getItem("fs_all_dictations") || "[]");
+                allDicts = allDicts.filter(d => d.id !== id);
+                localStorage.setItem("fs_all_dictations", JSON.stringify(allDicts));
+                loadAdminDictations();
+                alert("Dictation delete ho gayi hai.");
+            }
+        }
+    </script>
+</body>
+</html>
